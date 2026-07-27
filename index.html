@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Accident Insurance Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f3f4f6; }
+        .hide { display: none !important; }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-gray-800 font-sans p-4">
+
+<div class="max-w-3xl mx-auto mt-4">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-blue-900"><i class="fa-solid fa-shield-heart mr-2"></i>PA Insurance Calculator</h1>
+    </div>
+
+    <!-- 1. Global Profile -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-5">
+        <h2 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-700">1. Client Profile</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                <input type="number" id="inp-age" value="30" min="18" max="99" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-blue-900">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Work Class</label>
+                <select id="inp-class" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-blue-900">
+                    <option value="A">Class A</option>
+                    <option value="B">Class B</option>
+                    <option value="C">Class C</option>
+                    <option value="D">Class D</option>
+                </select>
+            </div>
+        </div>
+        <div id="student-container" class="mt-4 hide">
+            <label class="flex items-center text-sm text-blue-800 font-semibold bg-blue-50 p-3 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+                <input type="checkbox" id="inp-student" class="mr-3 h-5 w-5 text-blue-600 rounded focus:ring-blue-500">
+                Client is a full-time student (Qualifies for Bracket 1 A&S rates)
+            </label>
+        </div>
+    </div>
+
+    <!-- Path Selector -->
+    <div class="flex space-x-2 mb-5 bg-gray-200 p-1 rounded-lg">
+        <button id="btn-path-circle1" class="flex-1 py-3 rounded-md font-bold text-sm transition-colors bg-white shadow text-blue-800" onclick="setPath('circle1')">Lump Sum (Circle 1)</button>
+        <button id="btn-path-gip" class="flex-1 py-3 rounded-md font-bold text-sm transition-colors text-gray-600 hover:text-gray-800" onclick="setPath('gip')">Monthly Salary (GIP)</button>
+    </div>
+
+    <!-- PATH A: CIRCLE 1 & RIDERS -->
+    <div id="section-circle1">
+        <!-- Circle 1 Base -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-5 border-l-4 border-l-blue-500">
+            <h2 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-700">2. Circle 1 (Base Policy)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Scale</label>
+                    <select id="inp-c1-scale" class="w-full border-gray-300 border rounded-lg p-2">
+                        <option value="short">Short Scale</option>
+                        <option value="long">Long Scale</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Face Amount ($)</label>
+                    <input type="number" id="inp-c1-face" value="100000" step="1000" class="w-full border-gray-300 border rounded-lg p-2 font-bold text-blue-900">
+                    <p class="text-xs text-gray-500 mt-1">Minimum: $50,000</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rider Engine -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-5">
+            <h2 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-700">3. Rider Engine (Optional)</h2>
+            
+            <!-- WI Rider -->
+            <div class="mb-3 border rounded-lg overflow-hidden">
+                <div class="flex justify-between items-center p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition" onclick="toggleRider('wi')">
+                    <div class="font-medium text-gray-800">Weekly Indemnity (WI)</div>
+                    <input type="checkbox" id="chk-wi" class="h-5 w-5 rounded text-blue-600 pointer-events-none">
+                </div>
+                <div id="body-wi" class="p-4 bg-white border-t hide">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Desired Weekly Amount ($)</label>
+                    <input type="number" id="inp-wi-amount" class="w-full border-gray-300 border rounded-lg p-2" placeholder="e.g. 500">
+                    <p id="wi-hint" class="text-xs text-gray-500 mt-1"></p>
+                </div>
+            </div>
+
+            <!-- AMR Rider -->
+            <div class="mb-3 border rounded-lg overflow-hidden">
+                <div class="flex justify-between items-center p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition" onclick="toggleRider('amr')">
+                    <div class="font-medium text-gray-800">Accidental Medical Reimbursement (AMR)</div>
+                    <input type="checkbox" id="chk-amr" class="h-5 w-5 rounded text-blue-600 pointer-events-none">
+                </div>
+                <div id="body-amr" class="p-4 bg-white border-t hide">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">AMR Face Amount ($)</label>
+                    <input type="number" id="inp-amr-amount" class="w-full border-gray-300 border rounded-lg p-2" placeholder="Min $1,500">
+                    <p class="text-xs text-gray-500 mt-1">Must be between $1,500 - $500,000 (Max 20% of Circle 1 Face Amount)</p>
+                </div>
+            </div>
+
+            <!-- AIH Rider -->
+            <div class="mb-3 border rounded-lg overflow-hidden">
+                <div class="flex justify-between items-center p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition" onclick="toggleRider('aih')">
+                    <div class="font-medium text-gray-800">Accidental In-Hospital Income (AIH)</div>
+                    <input type="checkbox" id="chk-aih" class="h-5 w-5 rounded text-blue-600 pointer-events-none">
+                </div>
+                <div id="body-aih" class="p-4 bg-white border-t hide">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Weekly Income ($)</label>
+                    <input type="number" id="inp-aih-amount" class="w-full border-gray-300 border rounded-lg p-2">
+                </div>
+            </div>
+
+            <!-- A&S IH Rider -->
+            <div class="mb-3 border rounded-lg overflow-hidden">
+                <div class="flex justify-between items-center p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition" onclick="toggleRider('asih')">
+                    <div class="font-medium text-gray-800">Accident & Sickness In-Hospital (A&S IH)</div>
+                    <input type="checkbox" id="chk-asih" class="h-5 w-5 rounded text-blue-600 pointer-events-none">
+                </div>
+                <div id="body-asih" class="p-4 bg-white border-t hide">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Weekly Benefit ($)</label>
+                    <select id="inp-asih-amount" class="w-full border-gray-300 border rounded-lg p-2">
+                        <!-- Options generated by JS based on age -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- PWR Rider -->
+            <div class="mb-3 border rounded-lg overflow-hidden">
+                <div class="flex justify-between items-center p-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition" onclick="toggleRider('pwr')">
+                    <div class="font-medium text-gray-800">Passive War Risk (PWR)</div>
+                    <input type="checkbox" id="chk-pwr" class="h-5 w-5 rounded text-blue-600 pointer-events-none">
+                </div>
+                <div id="body-pwr" class="p-4 bg-white border-t hide">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
+                            <select id="inp-pwr-type" class="w-full border-gray-300 border rounded-lg p-2">
+                                <option value="death">Death Only</option>
+                                <option value="dismemberment">Death & Dismemberment</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Face Amount ($)</label>
+                            <input type="number" id="inp-pwr-amount" class="w-full border-gray-300 border rounded-lg p-2" placeholder="Max $100,000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PATH B: CIRCLE 5 (GIP) -->
+    <div id="section-gip" class="hide">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-5 border-l-4 border-l-purple-500">
+            <h2 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-700">Monthly Salary Annuity (GIP)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Desired Monthly Salary ($)</label>
+                    <input type="number" id="inp-gip-amount" value="500" class="w-full border-gray-300 border rounded-lg p-2 font-bold text-purple-900">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Payout Duration</label>
+                    <select id="inp-gip-duration" class="w-full border-gray-300 border rounded-lg p-2">
+                        <option value="10">10 Years</option>
+                        <option value="15">15 Years</option>
+                        <option value="20" selected>20 Years</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Premium Payment Type</label>
+                <select id="inp-gip-type" class="w-full border-gray-300 border rounded-lg p-2">
+                    <option value="annual">Annual Net Premium</option>
+                    <option value="3">3 Yrs Single Premium</option>
+                    <option value="5">5 Yrs Single Premium</option>
+                    <option value="7">7 Yrs Single Premium</option>
+                    <option value="10">10 Yrs Single Premium</option>
+                </select>
+            </div>
+            <p class="text-xs text-gray-500 mt-3"><i class="fa-solid fa-circle-info"></i> GIP is a standalone policy. Riders cannot be added. Rate ignores Age and is based entirely on Work Class.</p>
+        </div>
+    </div>
+
+    <!-- LIVE CALCULATION SUMMARY CARD (At bottom of page flow) -->
+    <div id="summary-card" class="bg-gray-900 text-white rounded-2xl shadow-xl p-6 mb-10 border border-gray-800 transition-colors duration-300">
+        
+        <!-- Embedded Error State (No Popups) -->
+        <div id="summary-error" class="hide flex flex-col items-center text-center py-4">
+            <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-3 block"></i>
+            <p id="inline-error-text" class="text-red-400 font-bold text-lg leading-tight">Error message here</p>
+        </div>
+
+        <!-- Valid State Circle 1 -->
+        <div id="summary-valid-c1" class="flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
+            <div class="mb-4 sm:mb-0">
+                <div class="text-sm text-gray-400 uppercase tracking-wider font-semibold">Total ANP (Base + Riders)</div>
+                <div class="text-2xl font-bold" id="out-anp">$0.00</div>
+                <div class="text-xs text-gray-500 mt-1 bg-gray-800 inline-block px-2 py-1 rounded-md"><i class="fa-solid fa-plus text-xs"></i> 11% Tax & $25 Policy Fee</div>
+            </div>
+            <div class="sm:text-right sm:border-l sm:border-gray-700 sm:pl-6 w-full sm:w-auto">
+                <div class="text-sm text-green-400 font-bold uppercase tracking-widest">Final Annual Premium</div>
+                <div class="text-4xl font-black text-green-400" id="out-final-premium">$0.00</div>
+            </div>
+        </div>
+
+        <!-- Valid State GIP -->
+        <div id="summary-valid-gip" class="hide flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
+            <div class="mb-4 sm:mb-0">
+                <div class="text-sm text-gray-400 uppercase tracking-wider font-semibold">GIP Premium Format</div>
+                <div class="text-lg text-purple-300 font-medium mt-1" id="out-gip-type-label">Annual Net Premium</div>
+            </div>
+            <div class="sm:text-right sm:border-l sm:border-gray-700 sm:pl-6 w-full sm:w-auto">
+                <div class="text-sm text-purple-400 font-bold uppercase tracking-widest">Final Premium</div>
+                <div class="text-4xl font-black text-purple-400" id="out-gip-premium">$0.00</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- RATE MATRICES ---
+    const rates_c1 = {
+        short: { A: 1.3, B: 1.3, C: 1.79, D: 2.27 },
+        long: { A: 1.49, B: 1.49, C: 2.05, D: 2.6 }
+    };
+
+    const rates_amr = { A: 0.018, B: 0.0215, C: 0.0265, D: 0.0325 };
+    const rates_aih = { A: 0.0528, B: 0.066, C: 0.0792, D: 0.1057 };
+    
+    // A&S IH Rates [AgeBracket][Amount]
+    const rates_asih = {
+        'b1': { 100:23, 200:46, 300:69, 500:115, 600:138, 1000:230 }, 
+        'b2': { 100:31, 200:62, 300:96, 500:155, 600:186, 1000:310, 1250:388, 1500:465, 1750:543, 2000:620 }, 
+        'b3': { 100:38, 200:76, 300:114, 500:190, 600:228, 1000:380, 1250:475, 1500:570, 1750:665, 2000:760 }, 
+        'b4': { 100:43, 200:86, 300:129, 500:215, 600:258, 1000:430, 1250:538, 1500:645, 1750:753, 2000:860 }, 
+        'b5': { 100:49, 200:98, 300:147, 500:245, 600:294, 1000:490, 1250:613, 1500:735, 1750:858, 2000:980 }  
+    };
+
+    const rates_gip = {
+        'A': { '20': { 'annual': 25.4, '3': 74.5, '5': 121.4, '7': 166.3, '10': 230.2 }, '15': { 'annual': 20.0, '3': 58.9, '5': 95.9, '7': 131.3, '10': 181.8 }, '10': { 'annual': 14.0, '3': 41.3, '5': 67.3, '7': 92.1, '10': 127.5 } },
+        'B': { '20': { 'annual': 25.4, '3': 74.5, '5': 121.4, '7': 166.3, '10': 230.2 }, '15': { 'annual': 20.0, '3': 58.9, '5': 95.9, '7': 131.3, '10': 181.8 }, '10': { 'annual': 14.0, '3': 41.3, '5': 67.3, '7': 92.1, '10': 127.5 } },
+        'C': { '20': { 'annual': 34.9, '3': 102.6, '5': 167.2, '7': 229.0, '10': 317.0 }, '15': { 'annual': 27.6, '3': 81.1, '5': 132.1, '7': 180.9, '10': 250.3 }, '10': { 'annual': 19.3, '3': 56.8, '5': 92.6, '7': 126.8, '10': 175.5 } },
+        'D': { '20': { 'annual': 44.3, '3': 130.2, '5': 212.1, '7': 290.4, '10': 402.0 }, '15': { 'annual': 35.0, '3': 102.8, '5': 167.5, '7': 229.3, '10': 317.4 }, '10': { 'annual': 24.5, '3': 72.1, '5': 117.5, '7': 160.9, '10': 222.6 } }
+    };
+
+    // --- STATE MANAGEMENT ---
+    let currentPath = 'circle1';
+    const riders = { wi: false, amr: false, aih: false, asih: false, pwr: false };
+
+    // --- UTILITIES ---
+    function formatCurrency(num) {
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function toggleRider(id) {
+        riders[id] = !riders[id];
+        document.getElementById(`chk-${id}`).checked = riders[id];
+        const body = document.getElementById(`body-${id}`);
+        if(riders[id]) body.classList.remove('hide');
+        else body.classList.add('hide');
+        calculate();
+    }
+
+    function setPath(path) {
+        currentPath = path;
+        
+        const b1 = document.getElementById('btn-path-circle1');
+        const b2 = document.getElementById('btn-path-gip');
+        
+        if(path === 'circle1') {
+            b1.className = "flex-1 py-3 rounded-md font-bold text-sm transition-colors bg-white shadow text-blue-800";
+            b2.className = "flex-1 py-3 rounded-md font-bold text-sm transition-colors text-gray-600 hover:text-gray-800";
+            document.getElementById('section-circle1').classList.remove('hide');
+            document.getElementById('section-gip').classList.add('hide');
+        } else {
+            b2.className = "flex-1 py-3 rounded-md font-bold text-sm transition-colors bg-white shadow text-purple-800";
+            b1.className = "flex-1 py-3 rounded-md font-bold text-sm transition-colors text-gray-600 hover:text-gray-800";
+            document.getElementById('section-gip').classList.remove('hide');
+            document.getElementById('section-circle1').classList.add('hide');
+        }
+        calculate();
+    }
+
+    function showError(msg) {
+        const card = document.getElementById('summary-card');
+        card.classList.remove('border-gray-800');
+        card.classList.add('border-red-900');
+
+        document.getElementById('summary-error').classList.remove('hide');
+        document.getElementById('summary-valid-c1').classList.add('hide');
+        document.getElementById('summary-valid-gip').classList.add('hide');
+        
+        document.getElementById('inline-error-text').innerText = msg;
+    }
+
+    function showC1Success(anp, finalPrem) {
+        const card = document.getElementById('summary-card');
+        card.classList.add('border-gray-800');
+        card.classList.remove('border-red-900');
+
+        document.getElementById('summary-error').classList.add('hide');
+        document.getElementById('summary-valid-c1').classList.remove('hide');
+        document.getElementById('summary-valid-gip').classList.add('hide');
+        
+        document.getElementById('out-anp').innerText = "$" + formatCurrency(anp);
+        document.getElementById('out-final-premium').innerText = "$" + formatCurrency(finalPrem);
+    }
+
+    function showGIPSuccess(prem, labelStr) {
+        const card = document.getElementById('summary-card');
+        card.classList.add('border-gray-800');
+        card.classList.remove('border-red-900');
+
+        document.getElementById('summary-error').classList.add('hide');
+        document.getElementById('summary-valid-c1').classList.add('hide');
+        document.getElementById('summary-valid-gip').classList.remove('hide');
+        
+        document.getElementById('out-gip-type-label').innerText = labelStr;
+        document.getElementById('out-gip-premium').innerText = "$" + formatCurrency(prem);
+    }
+
+    // Update dynamic UI elements
+    function updateDynamicUI(age, wClass) {
+        const validAge = age >= 18 ? age : 18;
+
+        // Student Checkbox 
+        const studentCont = document.getElementById('student-container');
+        if (age >= 18 && age <= 23) {
+            studentCont.classList.remove('hide');
+        } else {
+            studentCont.classList.add('hide');
+            document.getElementById('inp-student').checked = false;
+        }
+
+        // WI Hint
+        let wiCap = (wClass === 'C' || wClass === 'D') ? 250 : 2500;
+        document.getElementById('wi-hint').innerText = `Maximum allowed for Class ${wClass} is $${wiCap}`;
+
+        // A&S IH Dropdown Rebuild
+        let asih_bracket = null;
+        let isStudent = document.getElementById('inp-student').checked;
+
+        if (validAge >= 18 && validAge <= 23 && isStudent) asih_bracket = 'b1'; 
+        else if (validAge >= 18 && validAge <= 39) asih_bracket = 'b2';
+        else if (validAge >= 40 && validAge <= 49) asih_bracket = 'b3';
+        else if (validAge >= 50 && validAge <= 59) asih_bracket = 'b4';
+        else if (validAge >= 60 && validAge <= 64) asih_bracket = 'b5';
+
+        const sel = document.getElementById('inp-asih-amount');
+        let currentVal = sel.value;
+        sel.innerHTML = '';
+        
+        if(asih_bracket) {
+            const availableAmounts = Object.keys(rates_asih[asih_bracket]);
+            availableAmounts.forEach(amt => {
+                let opt = document.createElement('option');
+                opt.value = amt;
+                opt.innerText = "$" + amt;
+                sel.appendChild(opt);
+            });
+            if(availableAmounts.includes(currentVal)) sel.value = currentVal;
+        } else {
+            let opt = document.createElement('option');
+            opt.value = "0";
+            opt.innerText = "Not eligible for age " + age;
+            sel.appendChild(opt);
+        }
+    }
+
+    // --- MAIN CALCULATION ENGINE ---
+    function calculate() {
+        // Grab globals
+        const age = parseInt(document.getElementById('inp-age').value);
+        const wClass = document.getElementById('inp-class').value;
+        
+        // 1. Strict Minimum Age Check
+        if (!age || age < 18) {
+            updateDynamicUI(18, wClass); 
+            return showError("Minimum Age to apply is 18.");
+        }
+
+        updateDynamicUI(age, wClass);
+
+        if (currentPath === 'gip') {
+            // --- GIP LOGIC ---
+            const gipAmt = parseFloat(document.getElementById('inp-gip-amount').value) || 0;
+            const gipDur = document.getElementById('inp-gip-duration').value;
+            const gipType = document.getElementById('inp-gip-type').value;
+
+            if (gipAmt <= 0) return showError("Desired Monthly Salary must be greater than 0");
+
+            const rate = rates_gip[wClass][gipDur][gipType];
+            const premium = (gipAmt / 100) * rate;
+            
+            const labelMap = {
+                'annual': 'Annual Net Premium', '3': '3 Yrs Single Premium',
+                '5': '5 Yrs Single Premium', '7': '7 Yrs Single Premium', '10': '10 Yrs Single Premium'
+            };
+            
+            showGIPSuccess(premium, labelMap[gipType]);
+            return;
+        }
+
+        // --- CIRCLE 1 LOGIC ---
+        const scale = document.getElementById('inp-c1-scale').value;
+        const faceAmount = parseFloat(document.getElementById('inp-c1-face').value) || 0;
+
+        // 1. Strict Face Amount Checks
+        if (faceAmount < 50000) return showError("Minimum Face Amount for Circle 1 is $50,000.");
+        
+        if (wClass === 'C') {
+            if (age < 65 && faceAmount > 150000) return showError("Class C (Under 65) Maximum Face Amount is $150,000");
+            if (age >= 65 && faceAmount > 50000) return showError("Class C (65-69) Maximum Face Amount is $50,000");
+        }
+        if (wClass === 'D') {
+            if (age < 65 && faceAmount > 100000) return showError("Class D (Under 65) Maximum Face Amount is $100,000");
+            if (age >= 65 && faceAmount > 25000) return showError("Class D (65-69) Maximum Face Amount is $25,000");
+        }
+
+        let totalANP = 0;
+
+        // Circle 1 Base Calculation
+        let c1_rate = rates_c1[scale][wClass];
+        if (age >= 65 && age <= 69) c1_rate *= 1.5; // 50% Age Loading
+        totalANP += (faceAmount / 1000) * c1_rate;
+
+        // --- RIDER CALCULATIONS ---
+
+        // WI RIDER
+        if (riders.wi) {
+            const wiAmt = parseFloat(document.getElementById('inp-wi-amount').value) || 0;
+            const wiCap = (wClass === 'C' || wClass === 'D') ? 250 : 2500;
+            
+            if (wiAmt <= 0) return showError("WI: Enter a valid weekly amount.");
+            if (wiAmt > wiCap) return showError(`WI: Maximum weekly amount for Class ${wClass} is $${wiCap}`);
+            if (age > 69) return showError("WI: Available only for ages 18-69.");
+
+            let wiRate = 0;
+            if (age >= 18 && age <= 59) {
+                if (wClass === 'A') wiRate = wiAmt <= 750 ? 0.36 : 0.396;
+                else if (wClass === 'B') wiRate = wiAmt <= 750 ? 0.42 : 0.462;
+                else if (wClass === 'C') wiRate = 0.54;
+                else if (wClass === 'D') wiRate = 0.72;
+            } else if (age >= 60 && age <= 69) {
+                if (wClass === 'A') wiRate = wiAmt <= 750 ? 0.48 : 0.528;
+                else if (wClass === 'B') wiRate = wiAmt <= 750 ? 0.60 : 0.66;
+                else if (wClass === 'C') wiRate = 0.78;
+                else if (wClass === 'D') wiRate = 1.08;
+            }
+            totalANP += (wiAmt * wiRate);
+        }
+
+        // AMR RIDER
+        if (riders.amr) {
+            const amrAmt = parseFloat(document.getElementById('inp-amr-amount').value) || 0;
+            if (amrAmt < 1500) return showError("AMR: Minimum limit is $1,500");
+            if (amrAmt > 500000) return showError("AMR: Maximum limit is $500,000");
+            if (amrAmt > (faceAmount * 0.20)) return showError("AMR: Cannot exceed 20% of Circle 1 Face Amount ($" + formatCurrency(faceAmount*0.20) + ")");
+            
+            totalANP += (amrAmt * rates_amr[wClass]);
+        }
+
+        // AIH RIDER
+        if (riders.aih) {
+            const aihAmt = parseFloat(document.getElementById('inp-aih-amount').value) || 0;
+            if (aihAmt <= 0) return showError("AIH: Enter a valid weekly income.");
+            totalANP += (aihAmt * rates_aih[wClass]);
+        }
+
+        // A&S IH RIDER
+        if (riders.asih) {
+            const asihAmtStr = document.getElementById('inp-asih-amount').value;
+            if (asihAmtStr === "0" || !asihAmtStr) return showError("A&S IH: Not eligible for selected age.");
+            
+            let bracket = null;
+            let isStudent = document.getElementById('inp-student').checked;
+            
+            if (age >= 18 && age <= 23 && isStudent) bracket = 'b1';
+            else if (age >= 18 && age <= 39) bracket = 'b2';
+            else if (age >= 40 && age <= 49) bracket = 'b3';
+            else if (age >= 50 && age <= 59) bracket = 'b4';
+            else if (age >= 60 && age <= 64) bracket = 'b5';
+            
+            if (!bracket) return showError("A&S IH: Maximum eligible age is 64.");
+            
+            totalANP += rates_asih[bracket][parseInt(asihAmtStr)];
+        }
+
+        // PWR RIDER
+        if (riders.pwr) {
+            const pwrType = document.getElementById('inp-pwr-type').value;
+            const pwrAmt = parseFloat(document.getElementById('inp-pwr-amount').value) || 0;
+            
+            if (pwrAmt <= 0) return showError("PWR: Enter a valid face amount.");
+            if (pwrAmt > 100000) return showError("PWR: Maximum limit is $100,000");
+            
+            const pwrRate = pwrType === 'death' ? 1.69 : 3.38;
+            totalANP += (pwrAmt / 1000) * pwrRate;
+        }
+
+        // --- FINAL CHECKOUT ($100 HARD STOP) ---
+        if (totalANP < 100) {
+            return showError(`Minimum ANP of $100 not met. Currently $${formatCurrency(totalANP)}. Please increase coverage or add riders.`);
+        }
+
+        // Calculate Gross
+        const finalPremium = (totalANP * 1.11) + 25;
+        showC1Success(totalANP, finalPremium);
+    }
+
+    // --- DEBOUNCE FUNCTION ---
+    // Wait for the user to stop typing before calculating to prevent rapid error flashing
+    let typingTimer;
+    const typingInterval = 600; // 0.6 seconds
+
+    function debouncedCalculate() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(calculate, typingInterval);
+    }
+
+    // Add event listeners
+    // Use blur (click away) for instant check, and input (typing) with debounce
+    document.querySelectorAll('input[type="number"]').forEach(el => {
+        el.addEventListener('input', debouncedCalculate);
+        el.addEventListener('blur', calculate);
+    });
+
+    // Checkboxes and selects should calculate instantly
+    document.querySelectorAll('select, input[type="checkbox"]').forEach(el => {
+        el.addEventListener('change', calculate);
+    });
+
+    // Initial Calculation
+    calculate();
+
+</script>
+</body>
+</html>
